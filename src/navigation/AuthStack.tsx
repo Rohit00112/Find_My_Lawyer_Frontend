@@ -14,6 +14,7 @@ export default function AuthStackScreen() {
         component={RegistrationScreen}
         options={{ headerShown: false }}
       />
+
       <AuthStack.Screen
         name="Login"
         component={LoginScreen}

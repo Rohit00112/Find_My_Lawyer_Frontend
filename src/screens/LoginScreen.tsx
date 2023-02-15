@@ -1,22 +1,55 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   Platform,
 } from "react-native";
-import { IconButton, Snackbar } from "react-native-paper";
+import { TextInput, Snackbar } from "react-native-paper";
 import axios from "axios";
 import { EvilIcons } from "@expo/vector-icons";
 import { API_URL } from "../constants/Api";
-import { useNavigation } from "@react-navigation/native";
-import { AuthStackNavProp } from "../navigation/types";
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
 
-export default function LoginScreen() {
-  const navigation = useNavigation<AuthStackNavProp>();
+WebBrowser.maybeCompleteAuthSession();
+
+export default function LoginScreen({ navigation }: { navigation: any }) {
+  const [accessToken, setAccessToken] = useState<any>();
+  const [user, setUser] = useState(null);
+
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId:
+      "757081817359-ouvgc5fg7akk3trg9bseqccgmndblmcm.apps.googleusercontent.com",
+    androidClientId:
+      "757081817359-vt14t7qr3r6bl20do6r1433mua2frael.apps.googleusercontent.com",
+    scopes: ["profile", "email"],
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      setAccessToken(id_token);
+      navigation.navigate("HomeMain", {
+        screen: "Home",
+        response: id_token,
+      });
+    }
+  }, [response, accessToken]);
+
+  const fetchUserInfo = async () => {
+    let userInfoResponse = await fetch(
+      "https://www.googleapis.com/userinfo/v2/me",
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+    let userInfo = await userInfoResponse.json();
+    setUser(userInfo);
+  };
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,12 +68,14 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       const response = await api.post("/auth/signin", formData);
-      console.log(response.data);
       setsnackbar({
         message: "Login successful",
         visible: true,
       });
-      navigation.navigate("Home");
+      navigation.navigate("HomeMain", {
+        screen: "Home",
+        response: response.data,
+      });
     } catch (error: any) {
       console.log(error.response.data);
       setsnackbar({
@@ -74,35 +109,34 @@ export default function LoginScreen() {
         <Text style={styles.text_header}>Welcome Back!</Text>
       </View>
       <View style={styles.footer}>
-        <Text style={styles.text_footer}>Email</Text>
         <View style={styles.action}>
-          <EvilIcons
-            name="envelope"
-            size={24}
-            color="black"
-            style={styles.icon}
-          />
           <TextInput
+            mode="outlined"
+            label="Email"
             placeholder="Your Email"
             style={styles.textInput}
             autoCapitalize="none"
             onChangeText={(text) => handleInputChange("email", text)}
+            left={<TextInput.Icon icon="email" color="#000" />}
           />
         </View>
-        <Text style={[styles.text_footer, { marginTop: 35 }]}>Password</Text>
         <View style={styles.action}>
-          <EvilIcons name="lock" size={24} color="black" style={styles.icon} />
           <TextInput
+            mode="outlined"
+            label="Password"
             placeholder="Your Password"
             secureTextEntry={!passwordVisible}
             style={styles.textInput}
             autoCapitalize="none"
             onChangeText={(text) => handleInputChange("password", text)}
-          />
-          <IconButton
-            icon={passwordVisible ? "eye" : "eye-off"}
-            size={20}
-            onPress={handlePasswordVisibility}
+            left={<TextInput.Icon icon="lock" color="#000" />}
+            right={
+              <TextInput.Icon
+                icon={passwordVisible ? "eye-off" : "eye"}
+                color="#000"
+                onPress={handlePasswordVisibility}
+              />
+            }
           />
         </View>
         <View style={styles.signinContainer}>
@@ -123,6 +157,9 @@ export default function LoginScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.socialButton, { backgroundColor: "#dd4b39" }]}
+            onPress={() => {
+              promptAsync();
+            }}
           >
             <EvilIcons name="sc-google-plus" size={24} color="white" />
           </TouchableOpacity>
@@ -170,38 +207,31 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 20,
-    paddingVertical: 42,
-    marginTop: 30,
+    paddingVertical: 72,
   },
   text_header: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 30,
   },
-  text_footer: {
-    color: "#05375a",
-    fontSize: 18,
-  },
+
   action: {
     flexDirection: "row",
-    marginTop: 10,
-    borderBottomWidth: 1,
+    marginTop: 30,
     borderBottomColor: "#f2f2f2",
     paddingBottom: 5,
   },
-  icon: {
-    marginTop: 5,
-  },
+
   textInput: {
     flex: 1,
     marginTop: Platform.OS === "ios" ? 0 : -12,
-    paddingLeft: 10,
-    color: "#05375a",
+    width: "100%",
   },
   signinContainer: {
     alignItems: "center",
     marginTop: 50,
   },
+
   signinButton: {
     width: "100%",
     height: 50,

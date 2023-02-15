@@ -1,14 +1,12 @@
 import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   Platform,
 } from "react-native";
-import { IconButton, RadioButton, Snackbar } from "react-native-paper";
+import { RadioButton, Snackbar, TextInput, Text } from "react-native-paper";
 import axios from "axios";
 import { EvilIcons } from "@expo/vector-icons";
 import { API_URL } from "../constants/Api";
@@ -79,104 +77,103 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.text_header}>Register Now!</Text>
-      </View>
-      <View style={styles.footer}>
-        <Text style={styles.text_footer}>Email</Text>
-        <View style={styles.action}>
-          <EvilIcons
-            name="envelope"
-            size={24}
-            color="black"
-            style={styles.icon}
-          />
-          <TextInput
-            placeholder="Your Email"
-            style={styles.textInput}
-            autoCapitalize="none"
-            onChangeText={(text) => handleInputChange("email", text)}
-          />
+    <>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.text_header}>Register Now!</Text>
         </View>
-        <Text style={[styles.text_footer, { marginTop: 35 }]}>Password</Text>
-        <View style={styles.action}>
-          <EvilIcons name="lock" size={24} color="black" style={styles.icon} />
-          <TextInput
-            placeholder="Your Password"
-            secureTextEntry={!passwordVisible}
-            style={styles.textInput}
-            autoCapitalize="none"
-            onChangeText={(text) => handleInputChange("password", text)}
-          />
-          <IconButton
-            icon={passwordVisible ? "eye" : "eye-off"}
-            size={20}
-            onPress={handlePasswordVisibility}
-          />
-        </View>
-        <Text style={[styles.text_footer, { marginTop: 35 }]}>Name</Text>
-        <View style={styles.action}>
-          <EvilIcons name="user" size={24} color="black" style={styles.icon} />
-          <TextInput
-            placeholder="Your Name"
-            style={styles.textInput}
-            autoCapitalize="none"
-            onChangeText={(text) => handleInputChange("name", text)}
-          />
-        </View>
-        <Text style={[styles.text_footer, { marginTop: 35 }]}>Role</Text>
-        <View style={styles.action}>
-          <RadioButton.Group
-            onValueChange={(value) => handleInputChange("role", value)}
-            value={formData.role}
-          >
-            <View style={styles.radioGroup}>
-              <View style={styles.radio}>
-                <Text>Client</Text>
-                <RadioButton value="Client" />
+        <View style={styles.footer}>
+          <View style={styles.action}>
+            <TextInput
+              label="Email"
+              mode="outlined"
+              placeholder="Your Email"
+              style={styles.textInput}
+              autoCapitalize="none"
+              left={<TextInput.Icon icon="email" />}
+            />
+          </View>
+          <View style={{ marginVertical: -4 }}></View>
+          <View style={styles.action}>
+            <TextInput
+              label="Password"
+              mode="outlined"
+              secureTextEntry={!passwordVisible}
+              style={styles.textInput}
+              autoCapitalize="none"
+              onChangeText={(text) => handleInputChange("password", text)}
+              left={<TextInput.Icon icon="lock" />}
+              right={
+                <TextInput.Icon
+                  icon={passwordVisible ? "eye" : "eye-off"}
+                  onPress={handlePasswordVisibility}
+                />
+              }
+            />
+          </View>
+          <View style={styles.action}>
+            <TextInput
+              label="Name"
+              mode="outlined"
+              style={styles.textInput}
+              autoCapitalize="none"
+              onChangeText={(text) => handleInputChange("name", text)}
+              left={<TextInput.Icon icon="account" />}
+            />
+          </View>
+          <Text style={[styles.text_footer, { marginTop: 35 }]}>Role</Text>
+          <View style={styles.action}>
+            <RadioButton.Group
+              onValueChange={(value) => handleInputChange("role", value)}
+              value={formData.role}
+            >
+              <View style={styles.radioGroup}>
+                <View style={styles.radio}>
+                  <Text>Client</Text>
+                  <RadioButton value="Client" />
+                </View>
+                <View style={styles.radio}>
+                  <Text>Lawyer</Text>
+                  <RadioButton value="Lawyer" />
+                </View>
               </View>
-              <View style={styles.radio}>
-                <Text>Lawyer</Text>
-                <RadioButton value="Lawyer" />
-              </View>
-            </View>
-          </RadioButton.Group>
+            </RadioButton.Group>
+          </View>
+          {formData.role === "Lawyer" && <SpecializationDropDown />}
+          <View style={styles.button}>
+            <TouchableOpacity style={styles.signIn} onPress={handleRegister}>
+              <Text style={[styles.textSign, { color: "#fff" }]}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.orContainer}>
+            <View style={[styles.line, { flex: 1, alignSelf: "center" }]} />
+            <Text style={{ flex: 1, textAlign: "center", alignSelf: "center" }}>
+              OR
+            </Text>
+            <View style={[styles.line, { flex: 1, alignSelf: "center" }]} />
+          </View>
+          <View style={styles.socialContainer}>
+            <TouchableOpacity
+              onPress={facebookLogin}
+              style={[styles.socialButton, { backgroundColor: "#3b5998" }]}
+            >
+              <EvilIcons name="sc-facebook" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={googleLogin}
+              style={[styles.socialButton, { backgroundColor: "#db3236" }]}
+            >
+              <EvilIcons name="sc-google-plus" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.signUp}>
+            <Text style={styles.signUpText}>Already have an account?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+              <Text style={styles.signUpLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        {formData.role === "Lawyer" && <SpecializationDropDown />}
-        <View style={styles.button}>
-          <TouchableOpacity style={styles.signIn} onPress={handleRegister}>
-            <Text style={[styles.textSign, { color: "#fff" }]}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.orContainer}>
-          <View style={[styles.line, { flex: 1, alignSelf: "center" }]} />
-          <Text style={{ flex: 1, textAlign: "center", alignSelf: "center" }}>
-            OR
-          </Text>
-          <View style={[styles.line, { flex: 1, alignSelf: "center" }]} />
-        </View>
-        <View style={styles.socialContainer}>
-          <TouchableOpacity
-            onPress={facebookLogin}
-            style={[styles.socialButton, { backgroundColor: "#3b5998" }]}
-          >
-            <EvilIcons name="sc-facebook" size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={googleLogin}
-            style={[styles.socialButton, { backgroundColor: "#db3236" }]}
-          >
-            <EvilIcons name="sc-google-plus" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.signUp}>
-          <Text style={styles.signUpText}>Already have an account?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-            <Text style={styles.signUpLink}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
       <Snackbar
         visible={snackbar.visible}
         onDismiss={handleOnDismissSnackBar}
@@ -189,7 +186,7 @@ export default function RegisterScreen() {
       >
         {snackbar.message}
       </Snackbar>
-    </ScrollView>
+    </>
   );
 }
 
@@ -214,10 +211,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 30,
   },
-  icon: {
-    marginTop: 5,
-    fontSize: 25,
-  },
   text_header: {
     color: "#fff",
     fontWeight: "bold",
@@ -229,16 +222,14 @@ const styles = StyleSheet.create({
   },
   action: {
     flexDirection: "row",
-    marginTop: 10,
-    borderBottomWidth: 1,
+    marginTop: 30,
     borderBottomColor: "#f2f2f2",
     paddingBottom: 5,
   },
   textInput: {
     flex: 1,
     marginTop: Platform.OS === "ios" ? 0 : -12,
-    paddingLeft: 10,
-    color: "#05375a",
+    width: "100%",
   },
   button: {
     alignItems: "center",

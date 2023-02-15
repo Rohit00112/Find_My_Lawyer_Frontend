@@ -1,6 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
-import { RootNavigator } from "./src/navigation";
+import RootNavigator from "./src/navigation";
 
 export default function App() {
   return (
@@ -11,11 +10,5 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
+// web: 757081817359-ouvgc5fg7akk3trg9bseqccgmndblmcm.apps.googleusercontent.com
+// android: 757081817359-vt14t7qr3r6bl20do6r1433mua2frael.apps.googleusercontent.com
