@@ -1,7 +1,4 @@
-import {
-  CompositeNavigationProp,
-  NavigatorScreenParams,
-} from "@react-navigation/native";
+import { NavigatorScreenParams } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 export type AuthStackParamList = {

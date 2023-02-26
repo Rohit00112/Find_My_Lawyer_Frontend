@@ -1,10 +1,11 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/HomeScreen";
-import ProfileScreen from "../screens/ProfileScreen";
 import { BottomTabParamList } from "./types";
 import { Ionicons } from "@expo/vector-icons";
 import ChatList from "../screens/ChatList";
 import { useRoute } from "@react-navigation/native";
+import SettingsScreen from "../screens/SettingsScreen";
+import NotificationSCreen from "../screens/NotificationScreen";
 
 export default function BottomTabs() {
   const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -12,7 +13,12 @@ export default function BottomTabs() {
   const TabArr = [
     { name: "Home", component: HomeScreen, icon: "home" },
     { name: "Chat", component: ChatList, icon: "chatbox" },
-    { name: "Profile", component: ProfileScreen, icon: "person" },
+    {
+      name: "Notifications",
+      component: NotificationSCreen,
+      icon: "notifications",
+    },
+    { name: "Settings", component: SettingsScreen, icon: "settings" },
   ];
 
   const route = useRoute();
@@ -26,6 +32,13 @@ export default function BottomTabs() {
           component={tab.component}
           initialParams={route.params}
           options={{
+            headerShown: false,
+            tabBarBadge:
+              tab.name === "Notifications"
+                ? 3
+                : tab.name === "Chat"
+                ? 1
+                : undefined,
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 name={focused ? tab.icon : `${tab.icon}-outline`}

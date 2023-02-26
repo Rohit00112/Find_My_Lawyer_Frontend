@@ -1,87 +1,134 @@
-import React, { useState } from "react";
-import { View, FlatList, StyleSheet, TextInput } from "react-native";
-import { Text, Button, IconButton } from "react-native-paper";
-import * as DocumentPicker from "expo-document-picker";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  StyleSheet,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  FlatList,
+} from "react-native";
+import {
+  IconButton,
+  Text,
+  TextInput,
+  Avatar,
+  Caption,
+  Title,
+} from "react-native-paper";
+import moment from "moment";
 
-const ChatScreen = ({ route }: any) => {
-  console.log(route.param);
-
-  const { name, avatar } = route.params;
+const ChatScreen = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([
-    { id: 1, type: "received", text: "Hi there!" },
-    { id: 2, type: "sent", text: "Hello! How are you?" },
-    { id: 3, type: "received", text: "I am good, thanks for asking!" },
+    {
+      id: "1",
+      text: "Hey, what's up?",
+      createdAt: new Date(),
+      sender: {
+        id: 2,
+        name: "Jane Smith",
+        avatar: "https://i.pravatar.cc/150?img=38",
+      },
+    },
   ]);
-  const [typing, setTyping] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState(null);
+  const scrollViewRef = useRef<any>();
 
-  const handleSend = () => {
-    setMessages([
-      ...messages,
-      { id: Math.random(), type: "sent", text: message },
-    ]);
-    setMessage("");
+  useEffect(() => {
+    scrollToBottom();
+  }, []);
+
+  const scrollToBottom = () => {
+    scrollViewRef.current.scrollToEnd({ animated: true });
   };
 
-  const handleShareDocument = () => {
-    DocumentPicker.getDocumentAsync()
-      .then((document: any) => {
-        setSelectedDocument(document);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  const renderMessage = ({ item }: any) => {
-    if (item.type === "received") {
-      return (
-        <View style={styles.receivedMessage}>
-          <Text>{item.text}</Text>
-        </View>
-      );
+  const sendMessage = () => {
+    if (message.trim() !== "") {
+      const newMessage = {
+        id: Math.random().toString(36).substr(2, 9),
+        text: message.trim(),
+        createdAt: new Date(),
+        sender: {
+          id: 1,
+          name: "John Doe",
+          avatar: "https://i.pravatar.cc/150?img=37",
+        },
+      };
+      setMessages([...messages, newMessage]);
+      setMessage("");
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
-    return (
-      <View style={styles.sentMessage}>
-        <Text>{item.text}</Text>
-      </View>
-    );
   };
 
-  const handleDeleteDocument = () => {
-    setSelectedDocument(null);
-  };
   return (
-    <View style={styles.container}>
-      <FlatList data={messages} renderItem={renderMessage} />
-      {typing && (
-        <View style={styles.typingIndicator}>
-          <Text>{name} is typing...</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
+      <View style={styles.header}>
+        <Avatar.Image
+          source={{ uri: "https://i.pravatar.cc/150?img=38" }}
+          size={40}
+          style={styles.avatar}
+        />
+        <View style={styles.userInfo}>
+          <Title style={styles.userName}>Jane Smith</Title>
+          <Caption style={styles.lastSeen}>Last seen 10 minutes ago</Caption>
         </View>
-      )}
-      <View style={styles.inputContainer}>
-        {selectedDocument && (
-          <View style={styles.selectedDocumentContainer}>
-            <IconButton
-              icon="close"
-              size={24}
-              onPress={handleDeleteDocument}
-              style={styles.deleteDocumentButton}
-            />
-          </View>
+        <IconButton icon="phone" onPress={() => {}} />
+        <IconButton icon="video" onPress={() => {}} />
+        <IconButton icon="dots-vertical" onPress={() => {}} />
+      </View>
+      <FlatList
+        ref={scrollViewRef}
+        data={messages}
+        keyExtractor={(item: any) => item.id.toString()}
+        renderItem={({ item }: any) => (
+          <MessageBubble message={item} isMe={item.sender.id === 1} />
         )}
+        contentContainerStyle={styles.messagesContainer}
+      />
+      <View style={styles.inputContainer}>
+        <IconButton icon="camera" onPress={() => {}} />
         <TextInput
+          style={styles.textInput}
+          mode="flat"
+          placeholder="Type a message"
           value={message}
           onChangeText={(text) => setMessage(text)}
-          onFocus={() => setTyping(true)}
-          onBlur={() => setTyping(false)}
-          style={styles.input}
         />
-        <Button style={styles.sendButton} mode="contained" onPress={handleSend}>
-          Send
-        </Button>
-        <IconButton icon="paperclip" size={24} onPress={handleShareDocument} />
+        <IconButton icon="microphone" onPress={() => {}} />
+        <IconButton
+          icon="send"
+          disabled={message.trim() === ""}
+          onPress={sendMessage}
+        />
+      </View>
+    </KeyboardAvoidingView>
+  );
+};
+
+const MessageBubble = ({ message, isMe }: any) => {
+  return (
+    <View
+      style={[
+        styles.messageBubble,
+        isMe ? styles.sentBubble : styles.receivedBubble,
+      ]}
+    >
+      {!isMe && (
+        <Avatar.Image
+          source={{ uri: message.sender.avatar }}
+          size={30}
+          style={styles.avatar}
+        />
+      )}
+      <View style={styles.messageContent}>
+        <Text style={styles.messageText}>{message.text}</Text>
+        <Caption style={styles.messageTime}>
+          {moment(message.createdAt).format("LT")}
+        </Caption>
       </View>
     </View>
   );
@@ -92,72 +139,64 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-
-  receivedMessage: {
-    backgroundColor: "#ddd",
-    padding: 10,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-    marginRight: 60,
-    marginTop: 20,
-  },
-  sentMessage: {
-    backgroundColor: "#aaa",
-    padding: 10,
-    borderRadius: 20,
-    alignSelf: "flex-end",
-    marginLeft: 60,
-    marginBottom: 20,
-  },
-  typingIndicator: {
-    height: 40,
-    width: "100%",
+  header: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  avatar: {
+    marginRight: 16,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  lastSeen: {
+    fontSize: 14,
+    color: "#666",
+  },
+  messagesContainer: {
+    padding: 16,
+  },
+  messageBubble: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sentBubble: {
+    justifyContent: "flex-end",
+  },
+  receivedBubble: {
+    justifyContent: "flex-start",
+  },
+  messageContent: {
+    maxWidth: "80%",
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: "#eee",
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  messageTime: {
+    fontSize: 12,
+    color: "#666",
   },
   inputContainer: {
-    height: 60,
-    padding: 10,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#eee",
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
   },
-  input: {
+  textInput: {
     flex: 1,
-    height: 40,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    marginRight: 10,
-  },
-  sendButton: {
-    height: 40,
-    width: 40,
-    borderRadius: 20,
-    backgroundColor: "#4caf50",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  selectedDocumentContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#eee",
-    borderRadius: 15,
-    height: 30,
-    paddingHorizontal: 10,
-    marginRight: 10,
-  },
-  selectedDocumentName: {
-    fontSize: 14,
-  },
-  deleteDocumentButton: {
-    height: 30,
-    width: 60,
-    borderRadius: 15,
-    backgroundColor: "#f44336",
-    alignItems: "center",
-    justifyContent: "center",
+    marginRight: 16,
   },
 });
 

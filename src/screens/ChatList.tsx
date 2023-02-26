@@ -1,102 +1,92 @@
 import React, { useState } from "react";
-import { View, FlatList, StyleSheet, Image } from "react-native";
-import {
-  Avatar,
-  Text,
-  Button,
-  List,
-  TouchableRipple,
-  Searchbar,
-} from "react-native-paper";
+import { StyleSheet, View, FlatList } from "react-native";
+import { Searchbar, Text, List, Avatar, Badge } from "react-native-paper";
+
+const DATA = [
+  {
+    id: "1",
+    name: "John Doe",
+    message: "Hey, what's up?",
+    time: "11:30 AM",
+    avatar: "https://i.pravatar.cc/150?img=37",
+    seen: false,
+    date: "Yesterday",
+  },
+  {
+    id: "2",
+    name: "Jane Smith",
+    message: "Can you send me the files?",
+    time: "10:45 AM",
+    avatar: "https://i.pravatar.cc/150?img=38",
+    seen: true,
+    date: "Yesterday",
+  },
+  {
+    id: "3",
+    name: "Bob Johnson",
+    message: "Thanks for the help!",
+    time: "9:00 AM",
+    avatar: "https://i.pravatar.cc/150?img=39",
+    seen: true,
+    date: "2 days ago",
+  },
+];
 
 export default function ChatList({ navigation }: any) {
-  const [data, setData] = useState([
-    {
-      id: "1",
-      name: "John Doe",
-      message: "Hey there! How are you doing?",
-      time: "9:30 AM",
-      unread: true,
-      avatar: "",
-    },
-    {
-      id: "2",
-      name: "Jane Doe",
-      message: "Hey! I just wanted to check in.",
-      time: "8:45 AM",
-      unread: false,
-      avatar:
-        "https://images.unsplash.com/photo-1556740752-6a3a7d7b0f8a?ixid=MXwxMjA3fDB8MHxzZWFyY2h8Mnx8c2FycmF8ZW58MHx8MHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    },
-    {
-      id: "3",
-      name: "Bob Smith",
-      message: "Are we still on for tonight?",
-      time: "7:00 PM",
-      unread: true,
-      avatar:
-        "https://images.unsplash.com/photo-1556740752-6a3a7d7b0f8a?ixid=MXwxMjA3fDB8MHxzZWFyY2h8Mnx8c2FycmF8ZW58MHx8MHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    },
-    {
-      id: "4",
-      name: "Sarah Johnson",
-      message: "Can you send me the details again?",
-      time: "5:30 PM",
-      unread: false,
-      avatar:
-        "https://images.unsplash.com/photo-1556740752-6a3a7d7b0f8a?ixid=MXwxMjA3fDB8MHxzZWFyY2h8Mnx8c2FycmF8ZW58MHx8MHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    },
-  ]);
-
-  const handlePress = () => {
-    navigation.navigate("ChatScreen", {
-      data: data,
-    });
-  };
-
   const [searchQuery, setSearchQuery] = useState("");
 
+  const onChangeSearch = (query: any) => setSearchQuery(query);
+
   const renderItem = ({ item }: any) => (
-    <TouchableRipple onPress={handlePress}>
-      <List.Item
-        title={item.name}
-        description={item.message}
-        left={(props) => <Avatar.Image size={50} source={item.avatar} />}
-        right={(props) => (
-          <View style={styles.rightContainer}>
-            <Text style={styles.time}>{item.time}</Text>
-            {item.unread && (
-              <View style={styles.unread}>
-                <Text style={styles.unreadText}>New</Text>
+    <List.Item
+      title={item.name}
+      description={item.message}
+      left={() => <Avatar.Image source={item.avatar} size={50} />}
+      right={() => (
+        <View style={styles.rightContainer}>
+          <View style={styles.rightTop}>
+            {item.isNew ? (
+              <View style={styles.unseenContainer}>
+                <Badge style={styles.unseenBadge} />
+                <Text style={styles.unseenText}>New</Text>
+              </View>
+            ) : item.seen ? (
+              <Text style={styles.seenText}>{item.time}</Text>
+            ) : (
+              <View style={styles.unseenContainer}>
+                <Badge style={styles.unseenBadge}>New</Badge>
+                <Text style={styles.unseenText}>{item.time}</Text>
               </View>
             )}
           </View>
-        )}
-      />
-    </TouchableRipple>
+          <Text style={styles.date}>{item.date}</Text>
+        </View>
+      )}
+      onPress={() =>
+        navigation.navigate("ChatScreen", {
+          name: item.name,
+          avatar: item.avatar,
+        })
+      }
+    />
   );
 
-  const filterData = (text: any) => {
-    const filteredData = data.filter((item) =>
-      item.name.toLowerCase().includes(text.toLowerCase())
-    );
-    setData(filteredData);
-  };
+  const filteredData = DATA.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <View style={styles.container}>
       <Searchbar
         placeholder="Search"
-        onChangeText={(text) => {
-          setSearchQuery(text);
-          filterData(text);
-        }}
+        onChangeText={onChangeSearch}
         value={searchQuery}
+        style={styles.searchBar}
       />
       <FlatList
-        data={data}
-        renderItem={renderItem}
+        data={filteredData}
         keyExtractor={(item) => item.id}
+        renderItem={renderItem}
       />
     </View>
   );
@@ -105,20 +95,39 @@ export default function ChatList({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+  },
+  searchBar: {
+    marginVertical: 16,
   },
   rightContainer: {
+    alignItems: "flex-end",
+  },
+  rightTop: {
     flexDirection: "row",
     alignItems: "center",
   },
-  time: {
-    marginRight: 10,
+  unseenContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  unread: {
-    backgroundColor: "#007AFF",
-    borderRadius: 10,
-    padding: 5,
+  unseenBadge: {
+    backgroundColor: "#2979FF",
+    marginRight: 8,
   },
-  unreadText: {
-    color: "#fff",
+  unseenText: {
+    fontSize: 12,
+    color: "#757575",
+  },
+  seenText: {
+    fontSize: 12,
+    color: "#757575",
+    marginRight: 8,
+  },
+  date: {
+    fontSize: 12,
+    color: "#757575",
+    marginTop: 4,
   },
 });

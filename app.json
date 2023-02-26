@@ -21,7 +21,6 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.findmylawyer",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -29,11 +28,6 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "5266cfa3-d7bd-43b6-a80e-dab5aa03d46a"
-      }
     }
   }
 }

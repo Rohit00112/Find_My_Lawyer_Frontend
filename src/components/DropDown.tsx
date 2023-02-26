@@ -1,29 +1,48 @@
 import axios from "axios";
 import { useState, useEffect, useMemo } from "react";
+import { ActivityIndicator, Text, StyleSheet } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 
-const SpecializationDropDown = () => {
+interface Props {
+  baseUrl: string;
+}
+
+const SpecializationDropDown = ({ baseUrl }: Props) => {
   const [specialization, setSpecialization] = useState<any>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const api = useMemo(() => {
     return axios.create({
-      baseURL: "http://192.168.100.30:3000",
+      baseURL: baseUrl,
     });
-  }, []);
+  }, [baseUrl]);
 
   useEffect(() => {
+    setLoading(true);
     api
       .get("/specialization/all")
       .then((res: any) => {
         setSpecialization(res.data);
+        setLoading(false);
       })
       .catch((err: any) => {
-        console.log(err);
+        setError(err);
+        setLoading(false);
       });
   }, []);
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
+
+  if (loading) {
+    return <ActivityIndicator style={styles.loadingIndicator} />;
+  }
+
+  if (error) {
+    return <Text>Error fetching data</Text>;
+  }
+
   return (
     <DropDownPicker
       items={specialization.map((item: any) => ({
@@ -38,9 +57,19 @@ const SpecializationDropDown = () => {
       placeholder="Select Specialization"
       listMode="SCROLLVIEW"
       containerStyle={{ height: 70 }}
-      disableBorderRadius={true}
+      style={{
+        backgroundColor: "#fafafa",
+        borderWidth: 1,
+        borderColor: "#ccc",
+      }}
     />
   );
 };
+
+const styles = StyleSheet.create({
+  loadingIndicator: {
+    marginVertical: 10,
+  },
+});
 
 export default SpecializationDropDown;

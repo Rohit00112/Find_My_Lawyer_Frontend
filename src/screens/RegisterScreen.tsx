@@ -10,9 +10,9 @@ import { RadioButton, Snackbar, TextInput, Text } from "react-native-paper";
 import axios from "axios";
 import { EvilIcons } from "@expo/vector-icons";
 import { API_URL } from "../constants/Api";
-import SpecializationDropDown from "../components/DropDown";
 import { useNavigation } from "@react-navigation/native";
 import { AuthStackNavProp } from "../navigation/types";
+import SpecializationDropDown from "../components/DropDown";
 
 export default function RegisterScreen() {
   const navigation = useNavigation<AuthStackNavProp>();
@@ -89,6 +89,7 @@ export default function RegisterScreen() {
               mode="outlined"
               placeholder="Your Email"
               style={styles.textInput}
+              onChangeText={(text) => handleInputChange("email", text)}
               autoCapitalize="none"
               left={<TextInput.Icon icon="email" />}
             />
@@ -139,7 +140,9 @@ export default function RegisterScreen() {
               </View>
             </RadioButton.Group>
           </View>
-          {formData.role === "Lawyer" && <SpecializationDropDown />}
+          {formData.role === "Lawyer" && (
+            <SpecializationDropDown baseUrl={API_URL} />
+          )}
           <View style={styles.button}>
             <TouchableOpacity style={styles.signIn} onPress={handleRegister}>
               <Text style={[styles.textSign, { color: "#fff" }]}>Sign Up</Text>
@@ -193,7 +196,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
     backgroundColor: "#009387",
   },
   header: {
@@ -201,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 50,
-    marginTop: 20,
+    marginTop: 30,
   },
   footer: {
     flex: 3,

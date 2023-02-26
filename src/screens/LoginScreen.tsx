@@ -11,44 +11,14 @@ import { TextInput, Snackbar } from "react-native-paper";
 import axios from "axios";
 import { EvilIcons } from "@expo/vector-icons";
 import { API_URL } from "../constants/Api";
-import * as WebBrowser from "expo-web-browser";
+import * as webBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 
-WebBrowser.maybeCompleteAuthSession();
+webBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen({ navigation }: { navigation: any }) {
-  const [accessToken, setAccessToken] = useState<any>();
-  const [user, setUser] = useState(null);
-
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId:
-      "757081817359-ouvgc5fg7akk3trg9bseqccgmndblmcm.apps.googleusercontent.com",
-    androidClientId:
-      "757081817359-vt14t7qr3r6bl20do6r1433mua2frael.apps.googleusercontent.com",
-    scopes: ["profile", "email"],
-  });
-
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { id_token } = response.params;
-      setAccessToken(id_token);
-      navigation.navigate("HomeMain", {
-        screen: "Home",
-        response: id_token,
-      });
-    }
-  }, [response, accessToken]);
-
-  const fetchUserInfo = async () => {
-    let userInfoResponse = await fetch(
-      "https://www.googleapis.com/userinfo/v2/me",
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-    let userInfo = await userInfoResponse.json();
-    setUser(userInfo);
-  };
+  const [accessToken, setAccessToken] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState(null);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -63,6 +33,20 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
     visible: false,
   });
 
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId:
+      "757081817359-v5b9kr1793b0tskui8igb6us4gjk48ma.apps.googleusercontent.com",
+    androidClientId:
+      "757081817359-a8qc6b5ol9kfff7pn0g92aipp59gu99s.apps.googleusercontent.com",
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { authentication } = response;
+      setAccessToken(authentication?.accessToken);
+    }
+  }, [response]);
+
   const api = useMemo(() => axios.create({ baseURL: API_URL }), []);
 
   const handleLogin = async () => {
@@ -72,10 +56,16 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
         message: "Login successful",
         visible: true,
       });
-      navigation.navigate("HomeMain", {
-        screen: "Home",
-        response: response.data,
-      });
+      console.log(response.data.user.role);
+      if (response.data.user.role === "Client") {
+        navigation.navigate("HomeMain", {
+          screen: "HomeScreenr",
+          response: response.data.user,
+        });
+      }
+      if (response.data.user.role === "Lawyer") {
+        navigation.navigate("LawyerHome");
+      }
     } catch (error: any) {
       console.log(error.response.data);
       setsnackbar({
@@ -101,6 +91,34 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
       ...snackbar,
       visible: false,
     });
+  };
+
+  const fetchUserInfo = async () => {
+    const userInfoResponse = await fetch(
+      "https://www.googleapis.com/userinfo/v2/me",
+
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+    userInfoResponse.json().then((data) => {
+      setUserInfo(data);
+      console.log(data);
+    });
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      promptAsync();
+      fetchUserInfo();
+
+      navigation.navigate("HomeMain", {
+        screen: "HomeScreenr",
+        response: userInfo,
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -139,6 +157,13 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
             }
           />
         </View>
+        <View style={styles.forgotPasswordContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ForgotPassword")}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.signinContainer}>
           <TouchableOpacity style={styles.signinButton} onPress={handleLogin}>
             <Text style={styles.signinText}>Sign In</Text>
@@ -157,9 +182,8 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.socialButton, { backgroundColor: "#dd4b39" }]}
-            onPress={() => {
-              promptAsync();
-            }}
+            disabled={!request}
+            onPress={() => handleGoogleLogin()}
           >
             <EvilIcons name="sc-google-plus" size={24} color="white" />
           </TouchableOpacity>
@@ -207,7 +231,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 20,
-    paddingVertical: 72,
+    paddingVertical: 57,
   },
   text_header: {
     color: "#fff",
@@ -284,5 +308,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 20,
+  },
+  forgotPasswordContainer: {
+    alignItems: "flex-start",
+    marginTop: 10,
+  },
+  forgotPasswordText: {
+    color: "#009387",
+    fontSize: 14,
   },
 });
