@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,15 +11,9 @@ import { TextInput, Snackbar } from "react-native-paper";
 import axios from "axios";
 import { EvilIcons } from "@expo/vector-icons";
 import { API_URL } from "../constants/Api";
-import * as webBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-
-webBrowser.maybeCompleteAuthSession();
+import * as Animatable from "react-native-animatable";
 
 export default function LoginScreen({ navigation }: { navigation: any }) {
-  const [accessToken, setAccessToken] = useState<any>(null);
-  const [userInfo, setUserInfo] = useState(null);
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -33,20 +27,6 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
     visible: false,
   });
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId:
-      "757081817359-v5b9kr1793b0tskui8igb6us4gjk48ma.apps.googleusercontent.com",
-    androidClientId:
-      "757081817359-a8qc6b5ol9kfff7pn0g92aipp59gu99s.apps.googleusercontent.com",
-  });
-
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { authentication } = response;
-      setAccessToken(authentication?.accessToken);
-    }
-  }, [response]);
-
   const api = useMemo(() => axios.create({ baseURL: API_URL }), []);
 
   const handleLogin = async () => {
@@ -56,7 +36,7 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
         message: "Login successful",
         visible: true,
       });
-      console.log(response.data.user.role);
+
       if (response.data.user.role === "Client") {
         navigation.navigate("HomeMain", {
           screen: "HomeScreenr",
@@ -93,39 +73,11 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
     });
   };
 
-  const fetchUserInfo = async () => {
-    const userInfoResponse = await fetch(
-      "https://www.googleapis.com/userinfo/v2/me",
-
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-    userInfoResponse.json().then((data) => {
-      setUserInfo(data);
-      console.log(data);
-    });
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      promptAsync();
-      fetchUserInfo();
-
-      navigation.navigate("HomeMain", {
-        screen: "HomeScreenr",
-        response: userInfo,
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.text_header}>Welcome Back!</Text>
-      </View>
+      <Animatable.View style={styles.header} animation="fadeInUpBig">
+        <Text style={styles.text_header}>Welcome!</Text>
+      </Animatable.View>
       <View style={styles.footer}>
         <View style={styles.action}>
           <TextInput
@@ -182,8 +134,6 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.socialButton, { backgroundColor: "#dd4b39" }]}
-            disabled={!request}
-            onPress={() => handleGoogleLogin()}
           >
             <EvilIcons name="sc-google-plus" size={24} color="white" />
           </TouchableOpacity>
@@ -231,7 +181,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 20,
-    paddingVertical: 57,
+    paddingVertical: 77,
   },
   text_header: {
     color: "#fff",

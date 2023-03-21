@@ -1,130 +1,192 @@
-import axios from "axios";
-import React, { useMemo } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
-import { List, Switch } from "react-native-paper";
-import { API_URL } from "../constants/Api";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
+import { Appbar, Avatar, TextInput, Button } from "react-native-paper";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function SettingsScreen({ navigation }: { navigation: any }) {
-  const [isPushNotificationOn, setIsPushNotificationOn] = React.useState(false);
-  const [isEmailNotificationOn, setIsEmailNotificationOn] =
-    React.useState(false);
-  const onTogglePushNotification = () =>
-    setIsPushNotificationOn(!isPushNotificationOn);
-  const onToggleEmailNotification = () =>
-    setIsEmailNotificationOn(!isEmailNotificationOn);
+function SettingsScreen() {
+  const [editMode, setEditMode] = useState(false);
+  const [user, setUser] = useState({
+    firstName: "John",
+    lastName: "Doe",
+    email: "johndoe@example.com",
+    profilePicture: "https://picsum.photos/200",
+    phoneNumber: "+1234567890",
+    bio: "I'm a software engineer and I love to code!",
+  });
 
-  const api = useMemo(() => axios.create({ baseURL: API_URL }), []);
+  const translateY = useRef(new Animated.Value(50)).current;
 
-  const handleLogout = async () => {
-    try {
-      Alert.alert("Logout", "Are you sure you want to logout?", [
-        {
-          text: "Cancel",
-          onPress: () => {},
-          style: "cancel",
-        },
-        {
-          text: "OK",
-          onPress: async () => {
-            await api.get("/auth/signout");
-            navigation.navigate("Login");
-          },
-        },
-      ]);
-    } catch (error) {
-      console.log(error);
-    }
+  const toggleEditMode = () => {
+    setEditMode(!editMode);
   };
 
-  return (
-    <ScrollView>
-      <View style={styles.container}>
-        <Text style={styles.header}>Settings</Text>
-        <List.Section>
-          <List.Subheader>Account</List.Subheader>
-          <List.Item
-            title="Change Password"
-            left={() => <List.Icon icon="lock" />}
-            onPress={() => {}}
-          />
-          <List.Item
-            title="Change account details"
-            left={() => <List.Icon icon="account" />}
-            onPress={() => {}}
-          />
-        </List.Section>
-        <List.Section>
-          <List.Subheader>Notifications</List.Subheader>
-          <List.Item
-            title="Push Notifications"
-            left={() => <List.Icon icon="bell" />}
-            right={() => (
-              <Switch
-                value={isPushNotificationOn}
-                onValueChange={onTogglePushNotification}
-              />
-            )}
-            onPress={() => {}}
-          />
-          <List.Item
-            title="Email Notifications"
-            left={() => <List.Icon icon="email" />}
-            right={() => (
-              <Switch
-                value={isEmailNotificationOn}
-                onValueChange={onToggleEmailNotification}
-              />
-            )}
-            onPress={() => {}}
-          />
-        </List.Section>
-        <List.Section>
-          <List.Subheader>Privacy</List.Subheader>
-          <List.Item
-            title="Location Services"
-            left={() => <List.Icon icon="map-marker" />}
-            right={() => <Switch value={false} />}
-            onPress={() => {}}
-          />
-        </List.Section>
-        <List.Section>
-          <List.Subheader>Others</List.Subheader>
-          <List.Item
-            title="Change Language"
-            left={() => <List.Icon icon="translate" />}
-            onPress={() => {}}
-          />
-          <List.Item
-            title="About"
-            left={() => <List.Icon icon="information" />}
-            onPress={() => {}}
-          />
-        </List.Section>
+  const handleSave = () => {
+    // Save user profile changes
+    setEditMode(false);
+  };
 
-        <List.Section>
-          {/* logout button */}
-          <List.Item
-            title="Logout"
-            left={() => <List.Icon icon="logout" />}
-            onPress={() => {
-              handleLogout();
-            }}
+  useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: 0,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  return (
+    <Animated.View style={[styles.container, { transform: [{ translateY }] }]}>
+      <ScrollView>
+        <Appbar.Header style={styles.header}>
+          <Appbar.Action icon="menu" onPress={() => {}} />
+          <Appbar.Content title="Profile" />
+          <Appbar.Action
+            icon={editMode ? "close" : "pencil"}
+            onPress={toggleEditMode}
           />
-        </List.Section>
-      </View>
-    </ScrollView>
+        </Appbar.Header>
+        <View style={styles.profileContainer}>
+          <View style={styles.avatarContainer}>
+            <Avatar.Image source={{ uri: user.profilePicture }} size={100} />
+            {editMode && (
+              <TouchableOpacity style={styles.changeAvatarButton}>
+                <Ionicons name="camera" size={20} color="#fff" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.infoContainer}>
+            <TextInput
+              label="First Name"
+              value={user.firstName}
+              editable={editMode}
+              onChangeText={(text) => setUser({ ...user, firstName: text })}
+              style={styles.input}
+              underlineColor="#67aaf9"
+              theme={{ colors: { primary: "#67aaf9" } }}
+            />
+            <TextInput
+              label="Last Name"
+              value={user.lastName}
+              editable={editMode}
+              onChangeText={(text) => setUser({ ...user, lastName: text })}
+              style={styles.input}
+              underlineColor="#67aaf9"
+              theme={{ colors: { primary: "#67aaf9" } }}
+            />
+            <TextInput
+              label="Email"
+              value={user.email}
+              editable={editMode}
+              onChangeText={(text) => setUser({ ...user, email: text })}
+              style={styles.input}
+              underlineColor="#67aaf9"
+              theme={{ colors: { primary: "#67aaf9" } }}
+            />
+            <TextInput
+              label="Phone Number"
+              value={user.phoneNumber}
+              editable={editMode}
+              onChangeText={(text) => setUser({ ...user, phoneNumber: text })}
+              style={styles.input}
+              underlineColor="#67aaf9"
+              theme={{ colors: { primary: "#67aaf9" } }}
+            />
+            <TextInput
+              label="Bio"
+              value={user.bio}
+              editable={editMode}
+              onChangeText={(text) => setUser({ ...user, bio: text })}
+              style={styles.input}
+              underlineColor="#67aaf9"
+              theme={{ colors: { primary: "#67aaf9" } }}
+            />
+          </View>
+        </View>
+        {editMode && (
+          <Button
+            mode="contained"
+            onPress={handleSave}
+            style={styles.saveButton}
+            labelStyle={styles.saveButtonLabel}
+          >
+            Save
+          </Button>
+        )}
+      </ScrollView>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
+    backgroundColor: "#f7f7f7",
   },
   header: {
-    fontSize: 24,
+    backgroundColor: "#fff",
+    elevation: 0,
+  },
+  profileContainer: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    elevation: 1,
+  },
+  avatarContainer: {
+    position: "relative",
+  },
+  changeAvatarButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#67aaf9",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  infoContainer: {
+    flex: 1,
+    marginLeft: 20,
+  },
+  input: {
+    backgroundColor: "#fff",
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#c8c8c8",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+  },
+  saveButton: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    backgroundColor: "#67aaf9",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  saveButtonLabel: {
+    fontSize: 18,
     fontWeight: "bold",
-    marginVertical: 16,
+  },
+  bioInput: {
+    height: 100,
+    textAlignVertical: "top",
+  },
+  label: {
+    color: "#c8c8c8",
+    marginBottom: 5,
   },
 });
+
+export default SettingsScreen;

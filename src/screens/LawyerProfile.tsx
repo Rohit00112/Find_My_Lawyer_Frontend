@@ -5,24 +5,16 @@ import {
   Text,
   Image,
   ScrollView,
-  TouchableOpacity,
   Linking,
 } from "react-native";
-import {
-  Button,
-  Card,
-  Title,
-  TextInput,
-  Searchbar,
-  List,
-  IconButton,
-  Snackbar,
-} from "react-native-paper";
+import { Card, Title, List, IconButton, Modal } from "react-native-paper";
 import { useFonts, Comfortaa_400Regular } from "@expo-google-fonts/comfortaa";
 import AppLoading from "expo-app-loading";
 import { AirbnbRating } from "react-native-ratings";
 import axios from "axios";
 import { API_URL } from "../constants/Api";
+import HireLawyer from "./HireLawyer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LawyerProfile = ({
   route,
@@ -31,7 +23,12 @@ const LawyerProfile = ({
   route: any;
   navigation: any;
 }) => {
+  const { lawyer_id } = route.params.lawyer;
+  console.log(lawyer_id);
+
   let [fontsLoaded] = useFonts({ Comfortaa_400Regular });
+
+  console.log(route.params);
 
   const lawyer = route.params.lawyer;
 
@@ -48,6 +45,25 @@ const LawyerProfile = ({
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const getCurrUser = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("user");
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  useEffect(() => {
+    getCurrUser();
+  }, []);
+
+  const [isModalVisible, setIsModalVisible] = React.useState(false);
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
   };
 
   if (!fontsLoaded) {
@@ -86,28 +102,24 @@ const LawyerProfile = ({
               onPress={() => Linking.openURL(`tel:${lawyer.phone}`)}
             />
             <Text style={styles.contactText}>{lawyer.phone}</Text>
-
             <IconButton
               icon="email"
               size={20}
               onPress={() => Linking.openURL(`mailto:${lawyer.email}`)}
             />
             <Text style={styles.contactText}></Text>
-
             <IconButton
               icon="web"
               size={20}
               onPress={() => Linking.openURL(`${lawyer.website}`)}
             />
             <Text style={styles.contactText}>{lawyer.website}</Text>
-
             <IconButton
               icon="map-marker"
               size={20}
               onPress={() => Linking.openURL(`${lawyer.address}`)}
             />
             <Text style={styles.contactText}>{lawyer.address}</Text>
-
             <IconButton
               icon="chat"
               size={20}
@@ -115,16 +127,25 @@ const LawyerProfile = ({
                 navigation.navigate("ChatScreen", { lawyer: lawyer });
               }}
             />
-
             <IconButton
               icon="account-plus"
               size={20}
-              onPress={() => {
-                navigation.navigate("HireLawyer", { lawyer: lawyer });
-              }}
+              onPress={() => setIsModalVisible(true)}
             />
+            <Modal
+              visible={isModalVisible}
+              onDismiss={handleModalClose}
+              style={styles.modal}
+            >
+              <HireLawyer
+                visible={isModalVisible}
+                onClose={handleModalClose}
+                lawyer_id={lawyer_id}
+              />
+            </Modal>
           </View>
         </View>
+
         <View style={styles.descriptionContainer}>
           <Title style={styles.descriptionHeader}>About {lawyer.name}</Title>
           <Text style={styles.descriptionText}>{lawyer.Bio}</Text>
@@ -319,6 +340,12 @@ const styles = StyleSheet.create({
   listHeader: {
     fontSize: 20,
     fontWeight: "bold",
+    fontFamily: "Comfortaa_400Regular",
+  },
+  modal: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
     fontFamily: "Comfortaa_400Regular",
   },
 });

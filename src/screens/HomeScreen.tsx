@@ -6,7 +6,6 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  FlatList,
   Animated,
   ImageBackground,
   Dimensions,
@@ -35,10 +34,8 @@ const HomeScreen = ({ navigation }: any) => {
       response.data[i].rating = rating.data;
       response.data[i].speciality = speciality;
       response.data[i].image = image;
-      console.log(response.data[i].image);
     }
     setLawyers(response.data);
-    console.log(response.data);
   };
 
   const [lawyers, setLawyers] = React.useState([
@@ -187,13 +184,7 @@ const HomeScreen = ({ navigation }: any) => {
               onHandlerStateChange={onHandlerStateChange}
             >
               <View style={styles.swipeContent}>
-                <ScrollView>
-                  <FlatList
-                    data={lawyers}
-                    renderItem={({ item }) => renderLawyers(item)}
-                    keyExtractor={(item) => item.id}
-                  />
-                </ScrollView>
+                {lawyers.map((item) => renderLawyers(item))}
               </View>
             </PanGestureHandler>
           </Animated.View>
